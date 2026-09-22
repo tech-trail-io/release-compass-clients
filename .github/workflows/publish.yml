@@ -126,9 +126,9 @@ jobs:
       - name: Stage packages (OIDC + provenance)
         env:
           # Optional bootstrap / fallback: secrets.NPM_STAGE_TOKEN
-# (granular access token, Read and write → stage only, @techtrail scope).
-# Prefer Trusted Publisher OIDC once packages exist; remove the secret after.
-NODE_AUTH_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
+          # (granular access token, Read and write → stage only, @techtrail scope).
+          # Prefer Trusted Publisher OIDC once packages exist; remove the secret after.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
         run: |
           set -euo pipefail
