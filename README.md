@@ -144,3 +144,30 @@ pnpm typecheck
 ```
 
 Requires Node 24+ and pnpm 10+.
+
+## Releasing
+
+Public packages publish from GitHub Actions with [npm staged publishing](https://docs.npmjs.com/about-access-tokens#about-granular-access-tokens) and provenance (same trust model as [trusted publishing](https://docs.npmjs.com/trusted-publishers/)).
+
+1. **Bump & tag** — set package versions, commit, push `vX.Y.Z` (e.g. `git tag v0.1.0 && git push origin v0.1.0`).
+2. **CI stages** — `publish.yml` builds, then runs `npm stage publish` for each package (not a live release). Auth is OIDC when a Trusted Publisher is configured; until then the repo secret `NPM_STAGE_TOKEN` (granular, **stage only**) is used.
+3. **You approve** — on a trusted machine with org 2FA:
+
+```bash
+npm stage list
+npm stage approve <stage-id> --otp <code>
+```
+
+### npm package settings (once per package)
+
+For `@techtrail/release-compass-core`, `-react`, `-angular`, and `-next`:
+
+| Setting | Value |
+| --- | --- |
+| Trusted Publisher | GitHub · org `tech-trail-io` · repo `release-compass-clients` · workflow **`publish.yml`** · environment **`npm`** |
+| Allowed actions | **`npm stage publish` only** (do not allow direct `npm publish`) |
+| Publishing access | Prefer **Require 2FA and disallow tokens** after the first successful stage |
+
+Create a GitHub Environment named `npm` on this repo (optional reviewers / wait timer).
+
+Bootstrap tip: packages must exist on npm before Trusted Publisher can be attached. Use a short-lived [stage-only granular token](https://docs.npmjs.com/about-access-tokens#about-stage-only-tokens) as `NPM_STAGE_TOKEN` for the first `v*` tag, configure Trusted Publishers, then remove the secret if you want OIDC-only staging.
