@@ -1,6 +1,6 @@
 {
   "name": "@techtrail/release-compass-angular",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Public Release Compass changelog and request board embeds for Angular",
   "sideEffects": false,
   "module": "./dist/fesm2022/techtrail-release-compass-angular.mjs",

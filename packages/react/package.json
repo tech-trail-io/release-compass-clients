@@ -1,6 +1,6 @@
 {
   "name": "@techtrail/release-compass-react",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Public Release Compass changelog and request board embeds for React",
   "type": "module",
   "main": "./dist/index.cjs",
