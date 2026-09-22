@@ -1,0 +1,134 @@
+# Release Compass clients
+
+Embed [Release Compass](https://release-compass.app) changelogs and feature/bugfix boards in your product.
+
+| Package | Use |
+| --- | --- |
+| [`@techtrail/release-compass-core`](packages/core) | Typed HTTP client (public + server) |
+| [`@techtrail/release-compass-react`](packages/react) | Public React embeds (no tokens) |
+| [`@techtrail/release-compass-angular`](packages/angular) | Public Angular embeds (no tokens) |
+| [`@techtrail/release-compass-next`](packages/next) | Next.js server helpers (API keys, private boards, voting) |
+| `@techtrail/release-compass-vue` | **Soon** |
+
+## Auth boundary
+
+- **Public** release notes and roadmaps: no token. Safe in the browser via React / Angular.
+- **Private boards and voting**: project API key (`rc_live_…`) on your **backend** only. Use `@techtrail/release-compass-core`’s `createServerClient` or `@techtrail/release-compass-next`. Never put the key in `NEXT_PUBLIC_*` or a React/Angular prop.
+
+Default API base: `https://api.release-compass.app/api/v1`.
+
+## React (public)
+
+```bash
+pnpm add @techtrail/release-compass-react
+```
+
+```tsx
+import {
+  ReleaseCompassProvider,
+  Changelog,
+  RequestBoard,
+} from "@techtrail/release-compass-react";
+
+export function ProductUpdates() {
+  return (
+    <ReleaseCompassProvider projectSlug="your-project-slug">
+      <Changelog />
+      <RequestBoard />
+    </ReleaseCompassProvider>
+  );
+}
+```
+
+Markup is headless (`data-rc` attributes). Style it in your app.
+
+## Angular (public)
+
+```bash
+pnpm add @techtrail/release-compass-angular
+```
+
+```ts
+import {
+  provideReleaseCompass,
+  RcChangelogComponent,
+  RcRequestBoardComponent,
+} from "@techtrail/release-compass-angular";
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideReleaseCompass({ projectSlug: "your-project-slug" }),
+  ],
+});
+```
+
+```html
+<rc-changelog />
+<rc-request-board />
+```
+
+## Next.js (server / tokens)
+
+```bash
+pnpm add @techtrail/release-compass-next
+```
+
+Set server env (never `NEXT_PUBLIC_`):
+
+```bash
+RELEASE_COMPASS_API_KEY=rc_live_…
+RELEASE_COMPASS_PROJECT_SLUG=your-project-slug
+```
+
+```ts
+// app/api/requests/[id]/vote/route.ts
+import { voteRequest } from "@techtrail/release-compass-next";
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id } = await context.params;
+  const { voter } = (await request.json()) as { voter: string };
+  const updated = await voteRequest(id, voter);
+  return Response.json(updated);
+}
+```
+
+Private boards:
+
+```ts
+import { getRequestBoard } from "@techtrail/release-compass-next";
+
+const board = await getRequestBoard({}); // uses RELEASE_COMPASS_API_KEY
+```
+
+## Core only
+
+```ts
+import {
+  createPublicClient,
+  createServerClient,
+} from "@techtrail/release-compass-core";
+
+const publicClient = createPublicClient({ projectSlug: "your-project-slug" });
+await publicClient.getChangelog();
+
+// Server only — do not import into browser code
+const server = createServerClient({
+  projectSlug: "your-project-slug",
+  apiKey: process.env.RELEASE_COMPASS_API_KEY!,
+});
+await server.voteRequest("request-id", "user-42");
+```
+
+## Develop
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+pnpm typecheck
+```
+
+Requires Node 24+ and pnpm 10+.

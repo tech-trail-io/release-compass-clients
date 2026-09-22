@@ -1,0 +1,23 @@
+{
+  "name": "@techtrail/release-compass-clients",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Client libraries for embedding Release Compass changelogs and request boards",
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=24 <27",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@parcel/watcher"
+    ]
+  }
+}

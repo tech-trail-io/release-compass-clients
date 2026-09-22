@@ -1,0 +1,41 @@
+{
+  "name": "@techtrail/release-compass-next",
+  "version": "0.0.1",
+  "description": "Server-only Release Compass helpers for Next.js (private boards and voting with API keys)",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --external @techtrail/release-compass-core --external server-only",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@techtrail/release-compass-core": "workspace:*",
+    "server-only": "^0.0.1"
+  },
+  "peerDependencies": {
+    "next": ">=15"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "next": "^15.5.2",
+    "tsup": "^8.5.0",
+    "typescript": "5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
