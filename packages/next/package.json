@@ -36,6 +36,18 @@
     "typescript": "5.9.3"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/tech-trail-io/release-compass-clients#readme",
+  "bugs": {
+    "url": "https://github.com/tech-trail-io/release-compass-clients/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tech-trail-io/release-compass-clients.git",
+    "directory": "packages/next"
   }
 }
