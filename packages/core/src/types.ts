@@ -83,6 +83,7 @@ export interface PublicReleaseDto {
 export interface PublicChangelogDto {
   project: {
     name: string;
+    ownerSlug: string;
     slug: string;
     description?: string;
     logoUrl?: string;
@@ -117,6 +118,7 @@ export interface FeatureRequestDto {
 export interface PublicRequestBoardDto {
   project: {
     name: string;
+    ownerSlug: string;
     slug: string;
     requestBoard: RequestBoardVisibility;
     requestRevealIdentities: boolean;

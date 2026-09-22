@@ -17,6 +17,10 @@ Embed [Release Compass](https://release-compass.app) changelogs and feature/bugf
 
 Default API base: `https://api.release-compass.app/api/v1`.
 
+Public paths use **owner + project**:
+`/api/v1/public/changelogs/{owner}/{project}`.
+The owner segment is a user **username** or organization **slug**.
+
 ## React (public)
 
 ```bash
@@ -32,7 +36,7 @@ import {
 
 export function ProductUpdates() {
   return (
-    <ReleaseCompassProvider projectSlug="your-project-slug">
+    <ReleaseCompassProvider ownerSlug="acme" projectSlug="signals">
       <Changelog />
       <RequestBoard />
     </ReleaseCompassProvider>
@@ -57,7 +61,7 @@ import {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideReleaseCompass({ projectSlug: "your-project-slug" }),
+    provideReleaseCompass({ ownerSlug: "acme", projectSlug: "signals" }),
   ],
 });
 ```
@@ -77,7 +81,11 @@ Set server env (never `NEXT_PUBLIC_`):
 
 ```bash
 RELEASE_COMPASS_API_KEY=rc_live_…
-RELEASE_COMPASS_PROJECT_SLUG=your-project-slug
+# Either:
+RELEASE_COMPASS_OWNER_SLUG=acme
+RELEASE_COMPASS_PROJECT_SLUG=signals
+# Or combined:
+# RELEASE_COMPASS_PROJECT=acme/signals
 ```
 
 ```ts
@@ -100,7 +108,7 @@ Private boards:
 ```ts
 import { getRequestBoard } from "@techtrail/release-compass-next";
 
-const board = await getRequestBoard({}); // uses RELEASE_COMPASS_API_KEY
+const board = await getRequestBoard({}); // uses RELEASE_COMPASS_API_KEY + owner/project env
 ```
 
 ## Core only
@@ -111,12 +119,16 @@ import {
   createServerClient,
 } from "@techtrail/release-compass-core";
 
-const publicClient = createPublicClient({ projectSlug: "your-project-slug" });
+const publicClient = createPublicClient({
+  ownerSlug: "acme",
+  projectSlug: "signals",
+});
 await publicClient.getChangelog();
 
 // Server only — do not import into browser code
 const server = createServerClient({
-  projectSlug: "your-project-slug",
+  ownerSlug: "acme",
+  projectSlug: "signals",
   apiKey: process.env.RELEASE_COMPASS_API_KEY!,
 });
 await server.voteRequest("request-id", "user-42");
