@@ -32,6 +32,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Dependents resolve @techtrail/release-compass-core from dist/ types.
+      - run: pnpm --filter @techtrail/release-compass-core build
+
       - run: pnpm typecheck
 
       - run: pnpm test
