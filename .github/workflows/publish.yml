@@ -1,23 +1,20 @@
 name: Publish
 
-# Stage-only release (npm trusted publishing + provenance).
+# Release with provenance. New package names use `npm publish` once; later
+# versions use `npm stage publish` (maintainer approves with 2FA).
 #
-# On npmjs.com for each @techtrail/release-compass-* package:
-#   Settings → Trusted Publisher → GitHub Actions
-#     Organization: tech-trail-io
-#     Repository: release-compass-clients
-#     Workflow filename: publish.yml   ← filename only
-#     Environment name: npm
-#     Allowed actions: npm stage publish ONLY (do not allow npm publish)
-#   Settings → Publishing access → Require 2FA and disallow tokens
+# Auth (prefer OIDC after packages exist):
+#   Trusted Publisher per package → GitHub tech-trail-io/release-compass-clients
+#     workflow: publish.yml · environment: npm
+#     Allowed actions: both npm publish AND npm stage publish until bootstrap
+#     is done, then restrict to stage-only if you want.
+#   Fallback secret NPM_STAGE_TOKEN: granular token for @techtrail.
+#     First create needs Read and write (publish and stage), not stage-only.
+#     After packages exist you can switch the token (or OIDC) to stage-only.
 #
-# CI uploads a stage (not live). A maintainer then:
+# Approve staged versions locally:
 #   npm stage list
 #   npm stage approve <stage-id> --otp <code>
-#
-# Optional bootstrap (first package create only): a short-lived granular
-# access token with Read and write (stage only) for @techtrail scope.
-# Prefer OIDC after packages exist — see README "Releasing".
 
 on:
   push:
@@ -25,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Pack and dry-run stage publish without uploading"
+        description: "Pack and dry-run without uploading"
         type: boolean
         default: true
 
@@ -88,8 +85,8 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  stage:
-    name: Stage on npm (OIDC)
+  publish:
+    name: Publish or stage on npm
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: build
@@ -123,34 +120,18 @@ jobs:
         if: github.event_name == 'push'
         run: bash .github/scripts/set-version-from-tag.sh "${GITHUB_REF_NAME}"
 
-      - name: Stage packages (OIDC + provenance)
+      - name: Publish new packages / stage existing
         env:
-          # Optional bootstrap / fallback: secrets.NPM_STAGE_TOKEN
-          # (granular access token, Read and write → stage only, @techtrail scope).
-          # Prefer Trusted Publisher OIDC once packages exist; remove the secret after.
+          # Fallback when Trusted Publisher OIDC is not configured yet.
+          # First create of a package name needs publish rights (not stage-only).
           NODE_AUTH_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
         run: |
           set -euo pipefail
+          chmod +x .github/scripts/publish-or-stage.sh
           dry="${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}"
-          packages=(
-            packages/core
-            packages/react
-            packages/angular
-            packages/next
-          )
-          for dir in "${packages[@]}"; do
+          for dir in packages/core packages/react packages/angular packages/next; do
             echo "::group::${dir}"
-            if [ "$dry" = "true" ]; then
-              (cd "$dir" && npm stage publish --access public --dry-run)
-            else
-              (cd "$dir" && npm stage publish --access public)
-            fi
+            bash .github/scripts/publish-or-stage.sh "$dir" "$dry"
             echo "::endgroup::"
           done
-          if [ "$dry" != "true" ]; then
-            echo
-            echo "Staged. On a trusted machine with org 2FA:"
-            echo "  npm stage list"
-            echo "  npm stage approve <stage-id> --otp <code>"
-          fi
