@@ -164,8 +164,24 @@ npm stage approve <stage-id> --otp <code>
 
 | Situation | What to use |
 | --- | --- |
-| First create of a package name | Granular token with **publish and stage** (not stage-only) as `NPM_STAGE_TOKEN`, **or** Trusted Publisher that allows `npm publish` |
-| Later versions | Prefer Trusted Publisher with **`npm stage publish` only**; approve with 2FA |
+| **First create** (package name not on npm) | CI cannot supply a 2FA OTP. Either publish once **locally** with `--otp`, or use a temporary granular token with **Bypass 2FA** + **publish** as `NPM_STAGE_TOKEN`, then revoke Bypass 2FA |
+| Later versions | Prefer Trusted Publisher with **`npm stage publish` only**; approve with 2FA (`npm stage approve`) |
+
+Stage-only tokens and “Require 2FA / disallow tokens” are correct **after** the package exists — they will not create the first version from CI ([EOTP](https://docs.npmjs.com/about-access-tokens)).
+
+#### Local first publish (no Bypass 2FA)
+
+```bash
+pnpm install && pnpm build
+# after aligning versions, for each package:
+# --no-provenance: publishConfig.provenance is CI/OIDC-only (local → EUSAGE)
+(cd packages/core && npm publish --access public --otp=123456 --no-provenance)
+(cd packages/react && npm publish --access public --otp=123456 --no-provenance)
+(cd packages/angular && npm publish --access public --otp=123456 --no-provenance)
+(cd packages/next && npm publish --access public --otp=123456 --no-provenance)
+```
+
+Then configure Trusted Publisher on each package and use tags + stage for later releases (those get provenance from Actions).
 
 Trusted Publisher (once the package exists on npmjs.com):
 
