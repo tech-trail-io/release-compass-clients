@@ -174,13 +174,14 @@ Stage-only tokens and “Require 2FA / disallow tokens” are correct **after** 
 ```bash
 pnpm install && pnpm build
 # after aligning versions, for each package:
-(cd packages/core && npm publish --access public --otp=123456)
-(cd packages/react && npm publish --access public --otp=123456)
-(cd packages/angular && npm publish --access public --otp=123456)
-(cd packages/next && npm publish --access public --otp=123456)
+# --no-provenance: publishConfig.provenance is CI/OIDC-only (local → EUSAGE)
+(cd packages/core && npm publish --access public --otp=123456 --no-provenance)
+(cd packages/react && npm publish --access public --otp=123456 --no-provenance)
+(cd packages/angular && npm publish --access public --otp=123456 --no-provenance)
+(cd packages/next && npm publish --access public --otp=123456 --no-provenance)
 ```
 
-Then configure Trusted Publisher on each package and use tags + stage for later releases.
+Then configure Trusted Publisher on each package and use tags + stage for later releases (those get provenance from Actions).
 
 Trusted Publisher (once the package exists on npmjs.com):
 

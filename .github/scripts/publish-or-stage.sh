@@ -31,7 +31,7 @@ EOTP: npm requires interactive 2FA for this publish. CI cannot enter an OTP.
 
 Bootstrap options (pick one):
   1. Local (recommended for first create):
-       cd ${dir} && npm publish --access public --otp=<code>
+       cd ${dir} && npm publish --access public --otp=<code> --no-provenance
   2. Temporary granular token with Bypass 2FA + publish (and stage) for @techtrail,
      set as NPM_STAGE_TOKEN, re-run the tag workflow, then revoke Bypass 2FA /
      switch to stage-only or Trusted Publisher.
