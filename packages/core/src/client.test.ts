@@ -13,22 +13,56 @@ describe("createPublicClient", () => {
   it("loads a public changelog", async () => {
     const fetchImpl = vi.fn(async () =>
       Response.json({
-        project: { name: "Signals", slug: "signals", requestBoard: "public" },
+        project: {
+          name: "Signals",
+          ownerSlug: "acme",
+          slug: "signals",
+          requestBoard: "public",
+        },
         locale: "en",
         availableLocales: ["en"],
         releases: [],
       }),
     );
     const client = createPublicClient({
+      ownerSlug: "acme",
       projectSlug: "signals",
       baseUrl: "https://api.example/api/v1",
       fetchImpl: fetchImpl as typeof fetch,
     });
     const changelog = await client.getChangelog({ lang: "en" });
     expect(changelog.project.slug).toBe("signals");
+    expect(changelog.project.ownerSlug).toBe("acme");
     expect(fetchImpl).toHaveBeenCalledWith(
-      "https://api.example/api/v1/public/changelogs/signals?lang=en",
+      "https://api.example/api/v1/public/changelogs/acme/signals?lang=en",
       expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("accepts owner as an alias for ownerSlug", async () => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({
+        project: {
+          name: "Signals",
+          ownerSlug: "acme",
+          slug: "signals",
+          requestBoard: "public",
+        },
+        locale: "en",
+        availableLocales: ["en"],
+        releases: [],
+      }),
+    );
+    const client = createPublicClient({
+      owner: "acme",
+      projectSlug: "signals",
+      baseUrl: "https://api.example/api/v1",
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+    await client.getChangelog();
+    expect(client.ownerSlug).toBe("acme");
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(
+      "https://api.example/api/v1/public/changelogs/acme/signals",
     );
   });
 
@@ -37,6 +71,7 @@ describe("createPublicClient", () => {
       Response.json({
         project: {
           name: "Signals",
+          ownerSlug: "acme",
           slug: "signals",
           requestBoard: "public",
           requestRevealIdentities: false,
@@ -47,13 +82,36 @@ describe("createPublicClient", () => {
       }),
     );
     const client = createPublicClient({
+      ownerSlug: "acme",
       projectSlug: "signals",
       baseUrl: "https://api.example/api/v1",
       fetchImpl: fetchImpl as typeof fetch,
     });
     await client.getRequestBoard();
     expect(fetchImpl.mock.calls[0]?.[0]).toBe(
-      "https://api.example/api/v1/public/changelogs/signals/requests",
+      "https://api.example/api/v1/public/changelogs/acme/signals/requests",
+    );
+  });
+
+  it("subscribes with owner and project slugs", async () => {
+    const fetchImpl = vi.fn(async () => Response.json({ status: "pending" }));
+    const client = createPublicClient({
+      ownerSlug: "acme",
+      projectSlug: "signals",
+      baseUrl: "https://api.example/api/v1",
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+    await client.subscribe({ email: "user@example.com" });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "https://api.example/api/v1/subscribers",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          ownerSlug: "acme",
+          projectSlug: "signals",
+          email: "user@example.com",
+        }),
+      }),
     );
   });
 });
@@ -78,6 +136,7 @@ describe("createServerClient", () => {
       ]);
     });
     const client = createServerClient({
+      ownerSlug: "acme",
       projectSlug: "signals",
       apiKey: "rc_live_test",
       baseUrl: "https://api.example/api/v1",
@@ -85,8 +144,36 @@ describe("createServerClient", () => {
     });
     const board = await client.getRequestBoard();
     expect(board.requests).toHaveLength(1);
+    expect(board.ownerSlug).toBe("acme");
     expect(fetchImpl.mock.calls[0]?.[0]).toBe(
       "https://api.example/api/v1/requests",
+    );
+  });
+
+  it("loads changelog via owner/project public path", async () => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({
+        project: {
+          name: "Signals",
+          ownerSlug: "acme",
+          slug: "signals",
+          requestBoard: "public",
+        },
+        locale: "en",
+        availableLocales: ["en"],
+        releases: [],
+      }),
+    );
+    const client = createServerClient({
+      ownerSlug: "acme",
+      projectSlug: "signals",
+      apiKey: "rc_live_test",
+      baseUrl: "https://api.example/api/v1",
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+    await client.getChangelog({ lang: "en" });
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(
+      "https://api.example/api/v1/public/changelogs/acme/signals?lang=en",
     );
   });
 
@@ -104,6 +191,7 @@ describe("createServerClient", () => {
       }),
     );
     const client = createServerClient({
+      ownerSlug: "acme",
       projectSlug: "signals",
       apiKey: "rc_live_test",
       baseUrl: "https://api.example/api/v1",
@@ -147,6 +235,7 @@ describe("createServerClient", () => {
         }),
       );
     const client = createServerClient({
+      ownerSlug: "acme",
       projectSlug: "signals",
       apiKey: "rc_live_test",
       baseUrl: "https://api.example/api/v1",
@@ -167,6 +256,7 @@ describe("createServerClient", () => {
       Response.json({ message: "Already voted" }, { status: 409 }),
     );
     const client = createServerClient({
+      ownerSlug: "acme",
       projectSlug: "signals",
       apiKey: "rc_live_test",
       baseUrl: "https://api.example/api/v1",

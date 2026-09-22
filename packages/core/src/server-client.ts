@@ -12,6 +12,10 @@ import {
  * Do not use this in browser bundles — the key would leak.
  */
 export interface ServerClientOptions {
+  /** User username or organization slug (URL owner segment). */
+  ownerSlug?: string;
+  /** Alias for `ownerSlug`. */
+  owner?: string;
   projectSlug: string;
   apiKey: string;
   baseUrl?: string;
@@ -19,13 +23,15 @@ export interface ServerClientOptions {
 }
 
 export interface ServerRequestBoard {
+  ownerSlug: string;
   projectSlug: string;
   requests: FeatureRequestDto[];
 }
 
 export interface ServerClient {
+  readonly ownerSlug: string;
   readonly projectSlug: string;
-  /** Published public changelog for the project slug (no drafts via API key). */
+  /** Published public changelog for the owner/project (no drafts via API key). */
   getChangelog(options?: { lang?: string }): Promise<PublicChangelogDto>;
   /** Full request board including private boards and pending items. */
   getRequestBoard(): Promise<ServerRequestBoard>;
@@ -38,9 +44,18 @@ export interface ServerClient {
   voteRequest(requestId: string, voter: string): Promise<FeatureRequestDto>;
 }
 
+function resolveOwnerSlug(options: ServerClientOptions): string {
+  const ownerSlug = (options.ownerSlug ?? options.owner ?? "").trim();
+  if (!ownerSlug) {
+    throw new Error("ownerSlug (or owner) is required");
+  }
+  return ownerSlug;
+}
+
 export function createServerClient(
   options: ServerClientOptions,
 ): ServerClient {
+  const ownerSlug = resolveOwnerSlug(options);
   const projectSlug = options.projectSlug.trim();
   const apiKey = options.apiKey.trim();
   if (!projectSlug) {
@@ -55,16 +70,14 @@ export function createServerClient(
     fetchImpl: options.fetchImpl,
     apiKey,
   };
+  const changelogPath = `/public/changelogs/${encodeURIComponent(ownerSlug)}/${encodeURIComponent(projectSlug)}`;
 
   return {
+    ownerSlug,
     projectSlug,
     getChangelog({ lang } = {}) {
       const query = lang ? `?lang=${encodeURIComponent(lang)}` : "";
-      return requestJson(
-        http,
-        "GET",
-        `/public/changelogs/${encodeURIComponent(projectSlug)}${query}`,
-      );
+      return requestJson(http, "GET", `${changelogPath}${query}`);
     },
     async getRequestBoard() {
       const requests = await requestJson<FeatureRequestDto[]>(
@@ -72,7 +85,7 @@ export function createServerClient(
         "GET",
         "/requests",
       );
-      return { projectSlug, requests };
+      return { ownerSlug, projectSlug, requests };
     },
     listRequests() {
       return requestJson(http, "GET", "/requests");

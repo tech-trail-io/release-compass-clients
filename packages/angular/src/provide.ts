@@ -5,6 +5,10 @@ import {
 } from "@techtrail/release-compass-core";
 
 export interface ReleaseCompassConfig {
+  /** User username or organization slug (URL owner segment). */
+  ownerSlug?: string;
+  /** Alias for `ownerSlug`. */
+  owner?: string;
   projectSlug: string;
   baseUrl?: string;
   lang?: string;
@@ -23,6 +27,8 @@ export function provideReleaseCompass(config: ReleaseCompassConfig): Provider[] 
       provide: RELEASE_COMPASS_CLIENT,
       useFactory: (cfg: ReleaseCompassConfig) =>
         createPublicClient({
+          ownerSlug: cfg.ownerSlug,
+          owner: cfg.owner,
           projectSlug: cfg.projectSlug,
           baseUrl: cfg.baseUrl,
         }),

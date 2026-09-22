@@ -12,6 +12,10 @@ import {
 } from "react";
 
 export interface ReleaseCompassProviderProps {
+  /** User username or organization slug (URL owner segment). */
+  ownerSlug?: string;
+  /** Alias for `ownerSlug`. */
+  owner?: string;
   projectSlug: string;
   baseUrl?: string;
   lang?: string;
@@ -28,6 +32,8 @@ const ReleaseCompassContext = createContext<ReleaseCompassContextValue | null>(
 );
 
 export function ReleaseCompassProvider({
+  ownerSlug,
+  owner,
   projectSlug,
   baseUrl,
   lang,
@@ -35,10 +41,10 @@ export function ReleaseCompassProvider({
 }: ReleaseCompassProviderProps) {
   const value = useMemo(
     () => ({
-      client: createPublicClient({ projectSlug, baseUrl }),
+      client: createPublicClient({ ownerSlug, owner, projectSlug, baseUrl }),
       lang,
     }),
-    [projectSlug, baseUrl, lang],
+    [ownerSlug, owner, projectSlug, baseUrl, lang],
   );
 
   return (
