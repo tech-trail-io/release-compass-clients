@@ -21,6 +21,10 @@ Public paths use **owner + project**:
 `/api/v1/public/changelogs/{owner}/{project}`.
 The owner segment is a user **username** or organization **slug**.
 
+## Changelog filters
+
+Project admins hide changes (admin, infrastructure, internal, dependency, and similar) under **Settings → Changelog filters** in the Release Compass dashboard. The public changelog endpoint applies those filters on the server, so the packages return only visible entries and need no filtering of their own. The client packages cannot change filters: they use API keys, and filter changes require a signed-in project admin.
+
 ## React (public)
 
 ```bash
